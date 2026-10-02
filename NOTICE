@@ -1,0 +1,8 @@
+librarian-scholarly
+Copyright (c) 2026 Kevin J. Smith (https://github.com/kevin-j-smith/librarian-scholarly)
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This package calls the public APIs of OpenAlex, Crossref, arXiv, NCBI
+E-utilities (PubMed), and Semantic Scholar over HTTP. It contains none of
+their code or data; what they return is subject to each service's terms.
