@@ -26,8 +26,15 @@ def _snippet(year, venue, abstract) -> str:
     return f"{head} — {body}" if head and body else (head or body)
 
 
-def _result(url: str, title: str, snippet: str) -> SearchResult:
-    return SearchResult(url=url, title=_clean(title) or url, snippet=snippet, kind="science")
+def _result(url: str, title: str, snippet: str, venue: Optional[dict] = None) -> SearchResult:
+    r = SearchResult(url=url, title=_clean(title) or url, snippet=snippet, kind="science")
+    # The venue the work was published in, for librarian's venue signal
+    # (roadmap 2.23). Set after construction: a librarian older than 0.6
+    # has no such field and simply carries the attribute unused.
+    venue = {k: v for k, v in (venue or {}).items() if v}
+    if venue:
+        r.venue = venue
+    return r
 
 
 # ─── OpenAlex ──────────────────────────────────────────────────────────────
@@ -55,11 +62,14 @@ def openalex(query: str, count: int, cache=None) -> list[SearchResult]:
         oa = w.get("best_oa_location") or {}
         primary = w.get("primary_location") or {}
         url = oa.get("pdf_url") or oa.get("landing_page_url") or w.get("doi") or w.get("id")
-        venue = ((primary.get("source") or {}).get("display_name"))
+        source = primary.get("source") or {}
+        venue = source.get("display_name")
         if url:
             out.append(_result(url, w.get("display_name") or "",
                                _snippet(w.get("publication_year"), venue,
-                                        _abstract(w.get("abstract_inverted_index")))))
+                                        _abstract(w.get("abstract_inverted_index"))),
+                               venue={"openalex_id": (source.get("id") or "").rsplit("/", 1)[-1],
+                                      "issn_l": source.get("issn_l"), "name": venue}))
     return out
 
 
@@ -67,7 +77,7 @@ def openalex(query: str, count: int, cache=None) -> list[SearchResult]:
 
 def crossref(query: str, count: int, cache=None) -> list[SearchResult]:
     params = {"query": query, "rows": min(count, 50),
-              "select": "DOI,title,URL,published,container-title,abstract,type"}
+              "select": "DOI,title,URL,published,container-title,abstract,type,ISSN"}
     if settings.mailto:
         params["mailto"] = settings.mailto
     data = http.get("crossref", "https://api.crossref.org/works", params, cache=cache)
@@ -79,7 +89,8 @@ def crossref(query: str, count: int, cache=None) -> list[SearchResult]:
         year = (((item.get("published") or {}).get("date-parts") or [[None]])[0] or [None])[0]
         venue = (item.get("container-title") or [None])[0]
         if url and title:
-            out.append(_result(url, title, _snippet(year, venue, item.get("abstract"))))
+            out.append(_result(url, title, _snippet(year, venue, item.get("abstract")),
+                               venue={"issn_l": (item.get("ISSN") or [None])[0], "name": venue}))
     return out
 
 

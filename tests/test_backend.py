@@ -14,7 +14,8 @@ from librarian_scholarly.config import settings
 OPENALEX = {"results": [
     {"id": "https://openalex.org/W1", "doi": "https://doi.org/10.1145/1148170.1148222",
      "display_name": "Finding near-duplicate web pages", "publication_year": 2006,
-     "primary_location": {"source": {"display_name": "SIGIR"}},
+     "primary_location": {"source": {"id": "https://openalex.org/S4363608773", "display_name": "SIGIR",
+                                     "issn_l": None}},
      "best_oa_location": {"landing_page_url": "http://infoscience.epfl.ch/record/99373", "pdf_url": None},
      "abstract_inverted_index": {"Near-duplicate": [0], "pages": [1], "abound": [2]}},
     {"id": "https://openalex.org/W2", "doi": "https://doi.org/10.1000/xyz123", "display_name": "Paywalled",
@@ -22,7 +23,8 @@ OPENALEX = {"results": [
      "abstract_inverted_index": None}]}
 CROSSREF = {"message": {"items": [
     {"DOI": "10.1000/xyz123", "title": ["Paywalled"], "URL": "https://doi.org/10.1000/xyz123",
-     "published": {"date-parts": [[2020]]}, "container-title": ["J"], "abstract": "<jats:p>Text</jats:p>"},
+     "published": {"date-parts": [[2020]]}, "container-title": ["J"], "abstract": "<jats:p>Text</jats:p>",
+     "ISSN": ["1234-5678"]},
     {"DOI": "10.2139/ssrn.4032279", "title": ["Seed Selection Based Web Crawler"],
      "published": {"date-parts": [[2022]]}, "container-title": [], "abstract": None}]}}
 ARXIV = """<?xml version='1.0' encoding='UTF-8'?>
@@ -85,6 +87,16 @@ def test_each_source_picks_the_readable_link(served):
                                    "https://pubmed.ncbi.nlm.nih.gov/42805352/"]
     s2 = sources.semanticscholar("q", 5)
     assert s2[0].url == "https://arxiv.org/abs/cs/0301001"
+
+
+def test_results_name_their_venue(served):
+    """For librarian's venue signal (roadmap 2.23): the work's source as
+    OpenAlex and Crossref name it."""
+    oa = sources.openalex("q", 5)
+    assert oa[0].venue == {"openalex_id": "S4363608773", "name": "SIGIR"}
+    assert getattr(oa[1], "venue", None) is None              # no primary location
+    cr = sources.crossref("q", 5)
+    assert cr[0].venue == {"issn_l": "1234-5678", "name": "J"}
 
 
 def test_arxiv_queries_every_word():

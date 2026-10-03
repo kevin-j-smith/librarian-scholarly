@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-03
+
+### Added
+
+- OpenAlex and Crossref results name their venue (`venue`: the OpenAlex
+  source id, ISSN, and name), which librarian 0.6 stores on the ingested
+  document for its venue-quality signal. Older librarians ignore it.
+
 ## [0.1.0]
 
 First release on PyPI.
@@ -18,5 +26,6 @@ First release on PyPI.
   Retry-After), deduplication by DOI, arXiv id, or title, and librarian
   response-cache integration with API keys kept out of the cache.
 
-[Unreleased]: https://github.com/kevin-j-smith/librarian-scholarly/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kevin-j-smith/librarian-scholarly/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kevin-j-smith/librarian-scholarly/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kevin-j-smith/librarian-scholarly/releases/tag/v0.1.0
